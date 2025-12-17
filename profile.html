@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <title>Profil — CocktailApp</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo"><img src="icons/icon-192.png" class="logo-img" alt=""></div>
+      <div>
+        <div class="title">Profil</div>
+        <div class="subtitle" id="who"></div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-secondary" href="add.html">Dodaj koktajl</a>
+      <button id="logoutBtn" class="btn btn-ghost">Wyloguj</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="card-header">
+        <h1 id="tabTitle">Ulubione</h1>
+        <div class="row">
+          <button id="favTab" class="btn btn-primary" type="button">Ulubione</button>
+          <button id="ownTab" class="btn btn-ghost" type="button">Owns</button>
+        </div>
+      </div>
+
+      <div id="list" class="grid"></div>
+      <div id="empty" class="empty" hidden>
+        <div class="empty-emoji">🧾</div>
+        <div class="empty-title">Pusto</div>
+        <div class="empty-text">Dodaj ulubione lub stwórz własny koktajl.</div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav">
+      <a class="nav-item" href="index.html">Lista</a>
+      <a class="nav-item" href="add.html">Dodaj</a>
+      <a class="nav-item active" href="profile.html">Profil</a>
+    </nav>
+
+  </main>
+
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>

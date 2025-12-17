@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <title>Dodaj — CocktailApp</title>
+</head>
+<body>
+  <div id="offlineBanner" class="offline-banner" hidden>
+    Brak połączenia — możesz dodawać przepisy offline.
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <a class="btn btn-ghost" href="index.html">←</a>
+      <div>
+        <div class="title">Dodaj przepis</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="saveBtn" class="btn btn-primary">Zapisz</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="form-grid">
+        <label class="field">
+          <span>Nazwa</span>
+          <input id="name" class="input" placeholder="np. Mojito" />
+        </label>
+
+        <label class="field">
+          <span>Kategoria</span>
+          <input id="category" class="input" placeholder="Classic / Tiki / Bezalkoholowy" />
+        </label>
+
+        <label class="field full">
+          <span>Składniki</span>
+          <textarea id="ingredients" class="textarea" rows="6"
+            placeholder="- Rum 50 ml&#10;- Limonka&#10;- Mięta&#10;- Soda"></textarea>
+        </label>
+
+        <label class="field full">
+          <span>Instrukcja</span>
+          <textarea id="instructions" class="textarea" rows="6"
+            placeholder="Kroki przygotowania…"></textarea>
+        </label>
+
+        <div class="field full">
+          <span class="label">📷 Zdjęcie (kamera)</span>
+          <input id="photo" class="input" type="file" accept="image/*" />
+          <div id="photoPreviewWrap" class="preview-wrap" hidden>
+            <img id="photoPreview" class="preview-img" alt="Podgląd zdjęcia" />
+            <button id="clearPhotoBtn" class="btn btn-ghost" type="button">Usuń zdjęcie</button>
+          </div>
+        </div>
+
+        <div class="field full">
+          <span class="label">🎤 Notatka audio (mikrofon)</span>
+          <div class="row">
+            <button id="recordBtn" class="btn btn-secondary" type="button">Nagraj</button>
+            <button id="stopBtn" class="btn btn-ghost" type="button" disabled>Stop</button>
+            <button id="clearAudioBtn" class="btn btn-ghost" type="button" disabled>Usuń audio</button>
+          </div>
+          <audio id="audioPreview" class="audio" controls hidden></audio>
+        </div>
+
+        <div id="msg" class="msg" hidden></div>
+      </div>
+    </section>
+
+    <div class="bottom-spacer"></div>
+
+    <nav class="bottom-nav">
+      <a class="nav-item" href="index.html">Lista</a>
+      <a class="nav-item active" href="add.html">Dodaj</a>
+      <a class="nav-item" href="profile.html">Profil</a>
+    </nav>
+  </main>
+
+  <script type="module" src="js/add.js"></script>
+</body>
+</html>

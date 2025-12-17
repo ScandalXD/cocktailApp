@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <title>Logowanie — CocktailApp</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo"><img src="icons/icon-192.png" class="logo-img" alt=""></div>
+      <div>
+        <div class="title">Logowanie</div>
+        <div class="subtitle">CocktailApp</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-ghost" href="register.html">Rejestracja</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="form-grid">
+        <label class="field full">
+          <span>Email</span>
+          <input id="email" class="input" type="email" placeholder="email@domain.com">
+        </label>
+        <label class="field full">
+          <span>Hasło</span>
+          <input id="password" class="input" type="password" placeholder="••••••••">
+        </label>
+        <div class="field full">
+          <button id="loginBtn" class="btn btn-primary" type="button">Zaloguj</button>
+          <div id="msg" class="msg" hidden></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

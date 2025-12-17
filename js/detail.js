@@ -1,0 +1,152 @@
+import { initPWA } from "./app.js";
+import { getCurrentUser } from "./auth.js";
+import {
+  getCatalogById,
+  getUserCocktailById,
+  deleteUserCocktail,
+  updateUser,
+} from "./db.js";
+
+initPWA();
+
+let user = await getCurrentUser();
+if (!user) {
+  location.href = "login.html";
+  throw new Error("Not authenticated");
+}
+
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const isCatalog = params.get("cat") === "1";
+const isOwn = params.get("own") === "1";
+
+const content = document.getElementById("content");
+const notFound = document.getElementById("notFound");
+const subtitle = document.getElementById("subtitle");
+const deleteBtn = document.getElementById("deleteBtn");
+const favBtn = document.getElementById("favBtn");
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[m]));
+}
+
+let cocktail = null;
+
+if (isCatalog) cocktail = await getCatalogById(id);
+else if (isOwn) cocktail = await getUserCocktailById(id);
+
+if (!cocktail) {
+  content.innerHTML = "";
+  notFound.hidden = false;
+  deleteBtn.disabled = true;
+  if (favBtn) favBtn.hidden = true;
+  throw new Error("Not found");
+}
+
+notFound.hidden = true;
+subtitle.textContent = cocktail.name || "Koktajl";
+
+function favKey() {
+  if (isCatalog) return `cat:${cocktail.id}`;
+  if (isOwn) return `own:${cocktail.id}`;
+  return null;
+}
+
+function isFavKey(key) {
+  return (user.favorites || []).includes(key);
+}
+
+function updateFavBtnByKey(key) {
+  if (!favBtn) return;
+  if (!key) {
+    favBtn.hidden = true;
+    return;
+  }
+
+  favBtn.hidden = false;
+  const on = isFavKey(key);
+
+  favBtn.textContent = on ? "💔 Usuń z ulubionych" : "❤️ Dodaj do ulubionych";
+  favBtn.className = on ? "btn btn-danger" : "btn btn-secondary";
+}
+
+async function toggleFavByKey(key) {
+  const favs = new Set(user.favorites || []);
+  if (favs.has(key)) favs.delete(key);
+  else favs.add(key);
+
+  user.favorites = Array.from(favs);
+  await updateUser(user);
+  updateFavBtnByKey(key);
+}
+
+let imgHtml = "";
+if (cocktail.imageBlob) {
+  const url = URL.createObjectURL(cocktail.imageBlob);
+  imgHtml = `<img class="preview-img" style="width:100%;max-height:340px;object-fit:cover" src="${url}" alt="Zdjęcie koktajlu" />`;
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+}
+
+let audioHtml = `<div class="hint">Brak notatki audio.</div>`;
+if (cocktail.audioBlob) {
+  const aurl = URL.createObjectURL(cocktail.audioBlob);
+  audioHtml = `<audio class="audio" controls src="${aurl}"></audio>`;
+  setTimeout(() => URL.revokeObjectURL(aurl), 12000);
+}
+
+content.innerHTML = `
+  <h2>${escapeHtml(cocktail.name || "")}</h2>
+  <div class="meta">
+    <span class="badge"><span class="badge-dot"></span>${escapeHtml(cocktail.category || "Bez kategorii")}</span>
+    <span class="badge">📅 ${cocktail.createdAt ? new Date(cocktail.createdAt).toLocaleString() : ""}</span>
+  </div>
+
+  ${imgHtml}
+
+  <div class="block">
+    <b>Składniki</b>
+    <pre>${escapeHtml(cocktail.ingredients || "(brak)")}</pre>
+  </div>
+
+  <div class="block">
+    <b>Instrukcja</b>
+    <pre>${escapeHtml(cocktail.instructions || "(brak)")}</pre>
+  </div>
+
+  <div class="block">
+    <b>Audio</b>
+    ${audioHtml}
+  </div>
+`;
+
+const key = favKey();
+updateFavBtnByKey(key);
+
+if (favBtn && key) {
+  favBtn.addEventListener("click", async () => {
+    await toggleFavByKey(key);
+  });
+}
+
+if (!isOwn) {
+  deleteBtn.hidden = true;
+} else {
+  deleteBtn.hidden = false;
+  deleteBtn.disabled = false;
+
+  if (cocktail.ownerId !== user.id) {
+    deleteBtn.disabled = true;
+  }
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!confirm("Na pewno usunąć ten przepis?")) return;
+    await deleteUserCocktail(cocktail.id);
+    location.href = "profile.html";
+  });
+}

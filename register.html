@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <title>Rejestracja — CocktailApp</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a class="btn btn-ghost" href="login.html">←</a>
+      <div>
+        <div class="title">Rejestracja</div>
+        <div class="subtitle">CocktailApp</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="form-grid">
+        <label class="field full">
+          <span>Imię</span>
+          <input id="name" class="input" placeholder="np. Ihor">
+        </label>
+        <label class="field full">
+          <span>Email</span>
+          <input id="email" class="input" type="email">
+        </label>
+        <label class="field full">
+          <span>Hasło</span>
+          <input id="password" class="input" type="password">
+        </label>
+        <div class="field full">
+          <button id="regBtn" class="btn btn-primary" type="button">Utwórz konto</button>
+          <div id="msg" class="msg" hidden></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/register.js"></script>
+</body>
+</html>
