@@ -1,6 +1,6 @@
 import { initPWA } from "./app.js";
 import { getCurrentUser, logout } from "./auth.js";
-import { getCatalog, getUserCocktails, getUserById } from "./db.js";
+import { getCatalog, getUserCocktails, getUserById, updateUser } from "./db.js";
 
 initPWA();
 
@@ -13,13 +13,25 @@ if (!user) {
 const who = document.getElementById("who");
 const listEl = document.getElementById("list");
 const emptyEl = document.getElementById("empty");
-const tabTitle = document.getElementById("tabTitle");
-
 const favTab = document.getElementById("favTab");
 const ownTab = document.getElementById("ownTab");
 const logoutBtn = document.getElementById("logoutBtn");
 
-let mode = "fav";
+let mode = "own";
+
+const tab = new URLSearchParams(location.search).get("tab");
+if (tab === "fav") mode = "fav";
+if (tab === "own") mode = "own";
+
+function setMode(next) {
+  mode = next;
+
+  const url = new URL(location.href);
+  url.searchParams.set("tab", mode);
+  history.replaceState(null, "", url.toString());
+
+  refresh();
+}
 
 function tileHref(itemType, id) {
   return itemType === "catalog"
@@ -32,6 +44,33 @@ function renderTiles(items, itemType) {
     const a = document.createElement("a");
     a.className = "tile";
     a.href = tileHref(itemType, c.id);
+    const fav = document.createElement("button");
+    fav.type = "button";
+    fav.className = "fav-icon";
+
+    const key = itemType === "catalog" ? `cat:${c.id}` : `own:${c.id}`;
+
+    const isFav = (user.favorites || []).includes(key);
+    fav.textContent = isFav ? "❤️" : "🤍";
+    fav.classList.toggle("active", isFav);
+
+    fav.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const set = new Set(user.favorites || []);
+      if (set.has(key)) set.delete(key);
+      else set.add(key);
+
+      user.favorites = [...set];
+      await updateUser(user);
+
+      const nowFav = set.has(key);
+      fav.textContent = nowFav ? "❤️" : "🤍";
+      fav.classList.toggle("active", nowFav);
+    });
+
+    a.appendChild(fav);
 
     const img = document.createElement("img");
     img.className = "tile-img";
@@ -42,13 +81,14 @@ function renderTiles(items, itemType) {
       img.src = url;
       img.onload = () => URL.revokeObjectURL(url);
     } else {
-      img.src = "data:image/svg+xml;base64," + btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <rect width="100%" height="100%" fill="rgba(255,255,255,0.06)"/>
-          <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-            fill="rgba(255,255,255,0.65)" font-size="28">🍸</text>
-        </svg>
-      `);
+      const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+      <rect width="100%" height="100%" fill="rgba(255,255,255,0.06)"/>
+      <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+        fill="rgba(255,255,255,0.65)" font-size="28">🍸</text>
+    </svg>
+  `;
+      img.src = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
     }
 
     const body = document.createElement("div");
@@ -60,7 +100,9 @@ function renderTiles(items, itemType) {
 
     const badge = document.createElement("div");
     badge.className = "badge";
-    badge.innerHTML = `<span class="badge-dot"></span>${c.category || "Bez kategorii"}`;
+    badge.innerHTML = `<span class="badge-dot"></span>${
+      c.category || "Bez kategorii"
+    }`;
 
     body.appendChild(title);
     body.appendChild(badge);
@@ -72,64 +114,59 @@ function renderTiles(items, itemType) {
 }
 
 async function refresh() {
-  user = await getUserById(user.id);
+  try {
+    user = await getUserById(user.id);
+    who.textContent = `${user.name || ""} (${user.email})`;
 
-  who.textContent = `${user.name || ""} (${user.email})`;
+    listEl.innerHTML = "";
+    emptyEl.hidden = true;
 
-  listEl.innerHTML = "";
-  emptyEl.hidden = true;
+    if (mode === "fav") {
+      favTab.className = "btn btn-primary";
+      ownTab.className = "btn btn-ghost";
 
-  if (mode === "fav") {
-    tabTitle.textContent = "Ulubione";
-    favTab.className = "btn btn-primary";
-    ownTab.className = "btn btn-ghost";
+      const favSet = new Set(user.favorites || []);
+      const [catalog, owns] = await Promise.all([
+        getCatalog(),
+        getUserCocktails(user.id),
+      ]);
 
-    const favSet = new Set(user.favorites || []);
+      const favCatalog = catalog.filter((c) => favSet.has(`cat:${c.id}`));
+      const favOwns = owns.filter((c) => favSet.has(`own:${c.id}`));
 
-    const [catalog, owns] = await Promise.all([
-      getCatalog(),
-      getUserCocktails(user.id),
-    ]);
+      if (!favCatalog.length && !favOwns.length) {
+        emptyEl.hidden = false;
+        return;
+      }
 
-    const favCatalog = catalog.filter(c => favSet.has(`cat:${c.id}`));
-    const favOwns = owns.filter(c => favSet.has(`own:${c.id}`));
-
-    if (!favCatalog.length && !favOwns.length) {
-      emptyEl.hidden = false;
+      renderTiles(favCatalog, "catalog");
+      renderTiles(favOwns, "own");
       return;
     }
 
-    renderTiles(favCatalog, "catalog");
-    renderTiles(favOwns, "own");
-    return;
-  }
+    if (mode === "own") {
+      ownTab.className = "btn btn-primary";
+      favTab.className = "btn btn-ghost";
 
-  if (mode === "own") {
-    tabTitle.textContent = "Owns";
-    ownTab.className = "btn btn-primary";
-    favTab.className = "btn btn-ghost";
+      const owns = await getUserCocktails(user.id);
+      if (!owns.length) {
+        emptyEl.hidden = false;
+        return;
+      }
 
-    const owns = await getUserCocktails(user.id);
-    if (!owns.length) {
-      emptyEl.hidden = false;
-      return;
+      renderTiles(owns, "own");
     }
-
-    renderTiles(owns, "own");
+  } catch (e) {
+    console.error("Profile refresh error:", e);
+    listEl.innerHTML = "";
+    emptyEl.hidden = false;
   }
 }
 
-favTab.addEventListener("click", async () => {
-  mode = "fav";
-  await refresh();
-});
+favTab?.addEventListener("click", () => setMode("fav"));
+ownTab?.addEventListener("click", () => setMode("own"));
 
-ownTab.addEventListener("click", async () => {
-  mode = "own";
-  await refresh();
-});
-
-logoutBtn.addEventListener("click", () => {
+logoutBtn?.addEventListener("click", () => {
   logout();
   location.href = "login.html";
 });

@@ -12,27 +12,30 @@ const categoryEl = document.getElementById("category");
 const ingredientsEl = document.getElementById("ingredients");
 const instructionsEl = document.getElementById("instructions");
 const saveBtn = document.getElementById("saveBtn");
-
 const photoEl = document.getElementById("photo");
 const photoPreviewWrap = document.getElementById("photoPreviewWrap");
 const photoPreview = document.getElementById("photoPreview");
 const clearPhotoBtn = document.getElementById("clearPhotoBtn");
-
 const recordBtn = document.getElementById("recordBtn");
 const stopBtn = document.getElementById("stopBtn");
 const clearAudioBtn = document.getElementById("clearAudioBtn");
 const audioPreview = document.getElementById("audioPreview");
-
 const msg = document.getElementById("msg");
+const backBtn = document.getElementById("backBtn");
 
 let imageBlob = null;
 let audioBlob = null;
-
 let mediaRecorder = null;
 let chunks = [];
 let streamRef = null;
 let audioPreviewUrl = null;
 let photoPreviewUrl = null;
+
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    history.back();
+  });
+}
 
 function showMsg(t){ msg.textContent=t; msg.hidden=false; setTimeout(()=>msg.hidden=true, 2200); }
 
@@ -120,7 +123,7 @@ saveBtn.addEventListener("click", async () => {
 
   try{
     await addUserCocktail(cocktail);
-    location.href = "profile.html";
+    location.href = "profile.html?tab=own";
   }catch(e){
     console.error(e);
     showMsg("Błąd zapisu.");

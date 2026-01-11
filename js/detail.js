@@ -24,7 +24,12 @@ const content = document.getElementById("content");
 const notFound = document.getElementById("notFound");
 const subtitle = document.getElementById("subtitle");
 const deleteBtn = document.getElementById("deleteBtn");
-const favBtn = document.getElementById("favBtn");
+const backBtn = document.getElementById("backBtn");
+
+backBtn.addEventListener("click", () => {
+  if (history.length > 1) history.back();
+  else location.href = "index.html";
+});
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({
@@ -45,46 +50,12 @@ if (!cocktail) {
   content.innerHTML = "";
   notFound.hidden = false;
   deleteBtn.disabled = true;
-  if (favBtn) favBtn.hidden = true;
   throw new Error("Not found");
 }
 
 notFound.hidden = true;
 subtitle.textContent = cocktail.name || "Koktajl";
 
-function favKey() {
-  if (isCatalog) return `cat:${cocktail.id}`;
-  if (isOwn) return `own:${cocktail.id}`;
-  return null;
-}
-
-function isFavKey(key) {
-  return (user.favorites || []).includes(key);
-}
-
-function updateFavBtnByKey(key) {
-  if (!favBtn) return;
-  if (!key) {
-    favBtn.hidden = true;
-    return;
-  }
-
-  favBtn.hidden = false;
-  const on = isFavKey(key);
-
-  favBtn.textContent = on ? "💔 Usuń z ulubionych" : "❤️ Dodaj do ulubionych";
-  favBtn.className = on ? "btn btn-danger" : "btn btn-secondary";
-}
-
-async function toggleFavByKey(key) {
-  const favs = new Set(user.favorites || []);
-  if (favs.has(key)) favs.delete(key);
-  else favs.add(key);
-
-  user.favorites = Array.from(favs);
-  await updateUser(user);
-  updateFavBtnByKey(key);
-}
 
 let imgHtml = "";
 if (cocktail.imageBlob) {
@@ -125,14 +96,7 @@ content.innerHTML = `
   </div>
 `;
 
-const key = favKey();
-updateFavBtnByKey(key);
 
-if (favBtn && key) {
-  favBtn.addEventListener("click", async () => {
-    await toggleFavByKey(key);
-  });
-}
 
 if (!isOwn) {
   deleteBtn.hidden = true;
