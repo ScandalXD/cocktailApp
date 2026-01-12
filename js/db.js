@@ -159,6 +159,15 @@ export async function getUserCocktailById(id) {
   return item || null;
 }
 
+export async function updateUserCocktail(cocktail) {
+  const db = await openDB();
+  const tx = db.transaction("cocktails", "readwrite");
+  const s = tx.objectStore("cocktails");
+  await reqP(s.put(cocktail));
+  await tx.done?.catch?.(()=>{});
+  db.close();
+}
+
 export async function deleteUserCocktail(id) {
   const db = await openDB();
   const tx = db.transaction(STORES.cocktails, "readwrite");

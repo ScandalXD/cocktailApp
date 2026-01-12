@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <title>Edytuj — CocktailApp</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <button id="backBtn" class="btn btn-ghost" type="button">←</button>
+      <div>
+        <div class="title">Edytuj</div>
+        <div class="subtitle">Zmień swój przepis</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="saveBtn" class="btn btn-primary" type="button">Zapisz zmiany</button>
+      <button id="cancelBtn" class="btn btn-ghost" type="button">Anuluj</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="form-grid">
+        <label class="field full">
+          <span>Nazwa</span>
+          <input id="name" class="input" placeholder="np. Mojito">
+        </label>
+
+        <label class="field full">
+          <span>Kategoria</span>
+          <input id="category" class="input" placeholder="np. Klasyk / Bezalkoholowy">
+        </label>
+
+        <label class="field full">
+          <span>Składniki</span>
+          <textarea id="ingredients" class="textarea" rows="5" placeholder="np. rum, limonka..."></textarea>
+        </label>
+
+        <label class="field full">
+          <span>Instrukcja</span>
+          <textarea id="instructions" class="textarea" rows="5" placeholder="Jak przygotować..."></textarea>
+        </label>
+
+        <label class="field full">
+          <span>Zdjęcie (kamera / galeria)</span>
+          <input id="photo" class="input" type="file" accept="image/*" capture="environment">
+        </label>
+
+        <div id="photoPreviewWrap" class="field full" hidden>
+          <span>Podgląd</span>
+          <div class="preview-wrap">
+            <img id="photoPreview" class="preview-img" alt="">
+            <button id="clearPhotoBtn" class="btn btn-danger" type="button">Usuń zdjęcie</button>
+          </div>
+        </div>
+
+        <div class="field full">
+          <span>Notatka audio</span>
+          <div class="row">
+            <button id="recordBtn" class="btn btn-secondary" type="button">Nagraj</button>
+            <button id="stopBtn" class="btn btn-ghost" type="button" disabled>Zatrzymaj</button>
+            <button id="clearAudioBtn" class="btn btn-danger" type="button" disabled>Usuń audio</button>
+          </div>
+          <audio id="audioPreview" class="audio" controls hidden></audio>
+          <div class="hint">Możesz zostawić bez audio.</div>
+        </div>
+
+        <div class="field full">
+          <div id="msg" class="msg" hidden></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/edit.js"></script>
+</body>
+</html>

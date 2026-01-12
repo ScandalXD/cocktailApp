@@ -24,6 +24,7 @@ const content = document.getElementById("content");
 const notFound = document.getElementById("notFound");
 const subtitle = document.getElementById("subtitle");
 const deleteBtn = document.getElementById("deleteBtn");
+const editBtn = document.getElementById("editBtn");
 const backBtn = document.getElementById("backBtn");
 
 backBtn.addEventListener("click", () => {
@@ -55,6 +56,17 @@ if (!cocktail) {
 
 notFound.hidden = true;
 subtitle.textContent = cocktail.name || "Koktajl";
+
+if (editBtn) {
+  if (isOwn && cocktail.ownerId === user.id) {
+    editBtn.hidden = false;
+    editBtn.addEventListener("click", () => {
+      location.href = `edit.html?id=${encodeURIComponent(cocktail.id)}`;
+    });
+  } else {
+    editBtn.hidden = true;
+  }
+}
 
 
 let imgHtml = "";
