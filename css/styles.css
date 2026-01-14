@@ -399,4 +399,16 @@ a.btn{
   transform: scale(1.05);
 }
 
+.card-header .row{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search{
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
 

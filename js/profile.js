@@ -80,6 +80,8 @@ function renderTiles(items, itemType) {
       const url = URL.createObjectURL(c.imageBlob);
       img.src = url;
       img.onload = () => URL.revokeObjectURL(url);
+    } else if (c.image) {
+      img.src = c.image;
     } else {
       const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">

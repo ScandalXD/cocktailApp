@@ -1,78 +1,88 @@
 import { initPWA } from "./app.js";
-import { getCurrentUser } from "./auth.js";
-import { seedCatalogIfEmpty, getCatalog } from "./db.js";
+import { getCatalog, updateUser  } from "./db.js";
+import { getCurrentUser} from "./auth.js";
 
 initPWA();
 
 const user = await getCurrentUser();
-if (!user) {
-  location.href = "login.html";
-  throw new Error("Not authenticated");
-}
-
 const listEl = document.getElementById("list");
-const emptyEl = document.getElementById("empty");
-const qEl = document.getElementById("q");
+const searchEl = document.getElementById("search");
 
-let all = [];
+const allBtn = document.getElementById("allBtn");
+const alcBtn = document.getElementById("alcBtn");
+const nonBtn = document.getElementById("nonBtn");
+
+let catalog = await getCatalog();
+let filter = "all";
 
 function render(items) {
   listEl.innerHTML = "";
-  if (!items.length) {
-    emptyEl.hidden = false;
-    return;
-  }
-  emptyEl.hidden = true;
 
   for (const c of items) {
     const a = document.createElement("a");
-    a.href = `detail.html?cat=1&id=${encodeURIComponent(c.id)}`;
     a.className = "tile";
+    a.href = `detail.html?cat=1&id=${c.id}`;
+
+    const fav = document.createElement("button");
+    fav.className = "fav-icon";
+    fav.type = "button";
+
+    const key = `cat:${c.id}`;
+    const isFav = (user?.favorites || []).includes(key);
+    fav.textContent = isFav ? "❤️" : "🤍";
+
+    fav.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const set = new Set(user.favorites || []);
+      set.has(key) ? set.delete(key) : set.add(key);
+      user.favorites = [...set];
+      await updateUser(user);
+      fav.textContent = set.has(key) ? "❤️" : "🤍";
+    };
 
     const img = document.createElement("img");
     img.className = "tile-img";
-    img.alt = c.name || "Cocktail";
-    img.src = "data:image/svg+xml;base64," + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        <rect width="100%" height="100%" fill="rgba(255,255,255,0.06)"/>
-        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-          fill="rgba(255,255,255,0.65)" font-size="28">🍸</text>
-      </svg>
-    `);
+    img.src = c.image;
 
     const body = document.createElement("div");
     body.className = "tile-body";
+    body.innerHTML = `
+      <div class="tile-title">${c.name}</div>
+      <div class="badge"><span class="badge-dot"></span>${c.category}</div>
+    `;
 
-    const title = document.createElement("div");
-    title.className = "tile-title";
-    title.textContent = c.name || "(bez nazwy)";
-
-    const badge = document.createElement("div");
-    badge.className = "badge";
-    badge.innerHTML = `<span class="badge-dot"></span>${c.category || "Bez kategorii"}`;
-
-    body.appendChild(title);
-    body.appendChild(badge);
-
+    a.appendChild(fav);
     a.appendChild(img);
     a.appendChild(body);
     listEl.appendChild(a);
   }
 }
 
-function applyFilter() {
-  const q = (qEl.value || "").trim().toLowerCase();
-  if (!q) return render(all);
+function applyFilters() {
+  const q = searchEl.value.toLowerCase();
 
-  render(all.filter(c =>
-    (c.name || "").toLowerCase().includes(q) ||
-    (c.category || "").toLowerCase().includes(q) ||
-    (c.ingredients || "").toLowerCase().includes(q)
-  ));
+  render(
+    catalog.filter(c => {
+      const matchText =
+        c.name.toLowerCase().includes(q) ||
+        c.category.toLowerCase().includes(q);
+
+      const matchFilter =
+        filter === "all" ||
+        (filter === "alc" && c.category === "Alkoholowy") ||
+        (filter === "non" && c.category === "Bezalkoholowy");
+
+      return matchText && matchFilter;
+    })
+  );
 }
 
-qEl.addEventListener("input", applyFilter);
+searchEl.addEventListener("input", applyFilters);
 
-await seedCatalogIfEmpty();
-all = await getCatalog();
-applyFilter();
+allBtn.onclick = () => { filter = "all"; applyFilters(); };
+alcBtn.onclick = () => { filter = "alc"; applyFilters(); };
+nonBtn.onclick = () => { filter = "non"; applyFilters(); };
+
+applyFilters();
