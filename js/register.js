@@ -1,27 +1,41 @@
-import { initPWA } from "./app.js";
 import { register } from "./auth.js";
 
-initPWA();
-
-const name = document.getElementById("name");
-const email = document.getElementById("email");
-const pass = document.getElementById("password");
-const btn = document.getElementById("regBtn");
+const nameEl = document.getElementById("name");
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const regBtn = document.getElementById("regBtn");
 const msg = document.getElementById("msg");
 
-function show(t){ msg.textContent=t; msg.hidden=false; }
+function showMsg(text) {
+  msg.textContent = text;
+  msg.hidden = false;
+}
 
-btn.addEventListener("click", async () => {
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+}
+
+regBtn.addEventListener("click", async () => {
   msg.hidden = true;
-  try{
-    await register({
-      name: name.value.trim(),
-      email: email.value.trim().toLowerCase(),
-      password: pass.value
-    });
-    location.href = "profile.html";
-  }catch(e){
-    if (e.message === "EMAIL_EXISTS") show("Email już istnieje.");
-    else show("Błąd rejestracji.");
+
+  const name = (nameEl.value || "").trim();
+  const email = (emailEl.value || "").trim().toLowerCase();
+  const password = passEl.value || "";
+
+  if (!name) return showMsg("Podaj imię.");
+  if (!email) return showMsg("Podaj email.");
+  if (!isValidEmail(email)) return showMsg("Podaj poprawny adres email.");
+  if (!password) return showMsg("Hasło nie może być puste.");
+
+  try {
+    await register({ email, name, password });
+    location.href = "index.html";
+  } catch (e) {
+    console.error(e);
+    if (e?.message === "EMAIL_EXISTS") {
+      showMsg("Konto z tym emailem już istnieje.");
+    } else {
+      showMsg("Błąd rejestracji.");
+    }
   }
 });

@@ -1,32 +1,38 @@
-import { initPWA } from "./app.js";
-import { login, getCurrentUser } from "./auth.js";
+import { login } from "./auth.js";
 
-initPWA();
-
-const email = document.getElementById("email");
-const pass = document.getElementById("password");
-const btn = document.getElementById("loginBtn");
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
 const msg = document.getElementById("msg");
 
-function show(t) {
-  msg.textContent = t;
+function showMsg(text) {
+  msg.textContent = text;
   msg.hidden = false;
 }
 
-(async () => {
-  const u = await getCurrentUser();
-  if (u) location.href = "profile.html";
-})();
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+}
 
-btn.addEventListener("click", async () => {
+loginBtn.addEventListener("click", async () => {
   msg.hidden = true;
+
+  const email = (emailEl.value || "").trim().toLowerCase();
+  const password = passEl.value || "";
+
+  if (!email) return showMsg("Podaj email.");
+  if (!isValidEmail(email)) return showMsg("Podaj poprawny adres email.");
+  if (!password) return showMsg("Podaj hasło.");
+
   try {
-    await login({
-      email: email.value.trim().toLowerCase(),
-      password: pass.value,
-    });
-    location.href = "profile.html";
+    await login({ email, password });
+    location.href = "index.html";
   } catch (e) {
-    show("Błędny email lub hasło.");
+    console.error(e);
+    if (e?.message === "BAD_CREDENTIALS") {
+      showMsg("Nieprawidłowy email lub hasło.");
+    } else {
+      showMsg("Błąd logowania.");
+    }
   }
 });

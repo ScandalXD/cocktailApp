@@ -1,5 +1,5 @@
-const STATIC_CACHE = "cocktailapp-static-v2";
-const CATALOG_CACHE = "cocktailapp-catalog-v2";
+const STATIC_CACHE = "cocktailapp-static-v4";
+const IMG_CACHE = "cocktailapp-img-v4";
 
 const ASSETS = [
   "/",
@@ -43,7 +43,7 @@ self.addEventListener("install", (event) => {
       const staticCache = await caches.open(STATIC_CACHE);
       await staticCache.addAll(ASSETS);
 
-      const imgCache = await caches.open(CATALOG_CACHE);
+      const imgCache = await caches.open(IMG_CACHE);
       await imgCache.addAll(CATALOG_IMAGES);
 
       self.skipWaiting();
@@ -57,9 +57,8 @@ self.addEventListener("activate", (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys.map((k) => {
-          if (k !== STATIC_CACHE && k !== CATALOG_CACHE)
-            return caches.delete(k);
-          return Promise.resolve();
+          if (k !== STATIC_CACHE && k !== IMG_CACHE) return caches.delete(k);
+          return null;
         })
       );
       self.clients.claim();
@@ -69,18 +68,19 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-
+  const url = new URL(req.url);
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
+        const cached = await caches.match(req);
+        if (cached) return cached;
         try {
-          return await fetch(req);
+          const fresh = await fetch(req);
+          const cache = await caches.open(STATIC_CACHE);
+          cache.put(req, fresh.clone());
+          return fresh;
         } catch {
-          const cached = await caches.match("/index.html");
-          return (
-            cached ||
-            new Response("Offline", { status: 503, statusText: "Offline" })
-          );
+          return (await caches.match("/index.html")) || new Response("Offline", { status: 503 });
         }
       })()
     );
@@ -89,24 +89,38 @@ self.addEventListener("fetch", (event) => {
 
   if (req.method !== "GET") return;
 
+  if (req.destination === "image") {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(req);
+        if (cached) return cached;
+
+        try {
+          const fresh = await fetch(req);
+          const cache = await caches.open(IMG_CACHE);
+          cache.put(req, fresh.clone());
+          return fresh;
+        } catch {
+          return cached || new Response("", { status: 504 });
+        }
+      })()
+    );
+    return;
+  }
   event.respondWith(
     (async () => {
       const cached = await caches.match(req);
       if (cached) return cached;
 
       try {
-        const res = await fetch(req);
-        const url = new URL(req.url);
+        const fresh = await fetch(req);
         if (url.origin === location.origin) {
           const cache = await caches.open(STATIC_CACHE);
-          cache.put(req, res.clone());
+          cache.put(req, fresh.clone());
         }
-        return res;
+        return fresh;
       } catch {
-        return (
-          cached ||
-          new Response("", { status: 504, statusText: "Network error" })
-        );
+        return cached || new Response("", { status: 504 });
       }
     })()
   );

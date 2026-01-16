@@ -1,10 +1,15 @@
 import { initPWA } from "./app.js";
-import { getCatalog, updateUser  } from "./db.js";
+import { getCatalog, seedCatalog, updateUser  } from "./db.js";
 import { getCurrentUser} from "./auth.js";
 
 initPWA();
 
 const user = await getCurrentUser();
+if (!user) {
+  location.href = "login.html";
+  throw new Error("Not authenticated");
+}
+
 const listEl = document.getElementById("list");
 const searchEl = document.getElementById("search");
 
@@ -12,6 +17,7 @@ const allBtn = document.getElementById("allBtn");
 const alcBtn = document.getElementById("alcBtn");
 const nonBtn = document.getElementById("nonBtn");
 
+await seedCatalog();
 let catalog = await getCatalog();
 let filter = "all";
 

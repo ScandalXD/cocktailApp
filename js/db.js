@@ -1,5 +1,5 @@
 const DB_NAME = "cocktailapp_db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 const STORES = {
   users: "users",
@@ -27,6 +27,8 @@ function openDB() {
 
       if (!db.objectStoreNames.contains(STORES.catalog)) {
         const s = db.createObjectStore(STORES.catalog, { keyPath: "id" });
+        s.createIndex("category", "category");
+        s.createIndex("name", "name");
         s.createIndex("createdAt", "createdAt");
       }
     };
@@ -43,29 +45,25 @@ function reqP(req) {
   });
 }
 
-
 export async function createUser(user) {
   const db = await openDB();
   const tx = db.transaction(STORES.users, "readwrite");
-  const s = tx.objectStore(STORES.users);
-  await reqP(s.add(user));
+  await reqP(tx.objectStore(STORES.users).add(user));
   db.close();
 }
 
 export async function updateUser(user) {
   const db = await openDB();
   const tx = db.transaction(STORES.users, "readwrite");
-  const s = tx.objectStore(STORES.users);
-  await reqP(s.put(user));
+  await reqP(tx.objectStore(STORES.users).put(user));
   db.close();
 }
 
 export async function getUserByEmail(email) {
   const db = await openDB();
   const tx = db.transaction(STORES.users, "readonly");
-  const s = tx.objectStore(STORES.users);
-  const idx = s.index("email");
-  const user = await reqP(idx.get(email));
+  const s = tx.objectStore(STORES.users).index("email");
+  const user = await reqP(s.get(email));
   db.close();
   return user || null;
 }
@@ -73,8 +71,7 @@ export async function getUserByEmail(email) {
 export async function getUserById(id) {
   const db = await openDB();
   const tx = db.transaction(STORES.users, "readonly");
-  const s = tx.objectStore(STORES.users);
-  const user = await reqP(s.get(id));
+  const user = await reqP(tx.objectStore(STORES.users).get(id));
   db.close();
   return user || null;
 }
@@ -82,16 +79,14 @@ export async function getUserById(id) {
 export async function addUserCocktail(cocktail) {
   const db = await openDB();
   const tx = db.transaction(STORES.cocktails, "readwrite");
-  const s = tx.objectStore(STORES.cocktails);
-  await reqP(s.put(cocktail));
+  await reqP(tx.objectStore(STORES.cocktails).put(cocktail));
   db.close();
 }
 
 export async function getUserCocktails(ownerId) {
   const db = await openDB();
   const tx = db.transaction(STORES.cocktails, "readonly");
-  const s = tx.objectStore(STORES.cocktails);
-  const idx = s.index("ownerId");
+  const idx = tx.objectStore(STORES.cocktails).index("ownerId");
   const list = await reqP(idx.getAll(ownerId));
   db.close();
   return (list || []).sort((a, b) =>
@@ -102,30 +97,19 @@ export async function getUserCocktails(ownerId) {
 export async function getUserCocktailById(id) {
   const db = await openDB();
   const tx = db.transaction(STORES.cocktails, "readonly");
-  const s = tx.objectStore(STORES.cocktails);
-  const item = await reqP(s.get(id));
+  const item = await reqP(tx.objectStore(STORES.cocktails).get(id));
   db.close();
   return item || null;
 }
 
 export async function updateUserCocktail(cocktail) {
-<<<<<<< HEAD
-  const db = await openDB();
-  const tx = db.transaction("cocktails", "readwrite");
-  const s = tx.objectStore("cocktails");
-  await reqP(s.put(cocktail));
-  await tx.done?.catch?.(()=>{});
-  db.close();
-=======
   return addUserCocktail(cocktail);
->>>>>>> 8a3410c (add catalog list and fix bugs)
 }
 
 export async function deleteUserCocktail(id) {
   const db = await openDB();
   const tx = db.transaction(STORES.cocktails, "readwrite");
-  const s = tx.objectStore(STORES.cocktails);
-  await reqP(s.delete(id));
+  await reqP(tx.objectStore(STORES.cocktails).delete(id));
   db.close();
 }
 
@@ -134,7 +118,7 @@ const CATALOG = [
     id: "mojito",
     name: "Mojito",
     category: "Alkoholowy",
-    image: "icons/alcoholic/mojito.jpg",
+    image: "/icons/alcoholic/mojito.jpg",
     ingredients: `50 ml białego rumu
 1 limonka
 2 łyżeczki cukru trzcinowego
@@ -146,24 +130,22 @@ Dodaj miętę i kruszony lód.
 Wlej rum, dopełnij wodą gazowaną.
 Delikatnie wymieszaj.`,
   },
-
   {
     id: "margarita",
     name: "Margarita",
     category: "Alkoholowy",
-    image: "icons/alcoholic/margarita.jpg",
+    image: "/icons/alcoholic/margarita.jpg",
     ingredients: `50 ml tequili
 25 ml triple sec
 25 ml soku z limonki`,
     instructions: `Wstrząśnij składniki z lodem.
 Przelej do kieliszka z solonym brzegiem.`,
   },
-
   {
     id: "martini",
     name: "Martini",
     category: "Alkoholowy",
-    image: "icons/alcoholic/martini.jpg",
+    image: "/icons/alcoholic/martini.jpg",
     ingredients: `60 ml ginu
 10 ml wermutu
 oliwka`,
@@ -171,12 +153,11 @@ oliwka`,
 Przecedź do schłodzonego kieliszka.
 Udekoruj oliwką.`,
   },
-
   {
     id: "bloody-mary",
     name: "Bloody Mary",
     category: "Alkoholowy",
-    image: "icons/alcoholic/bloody-mary.jpg",
+    image: "/icons/alcoholic/bloody-mary.jpg",
     ingredients: `50 ml wódki
 100 ml soku pomidorowego
 sok z cytryny
@@ -184,22 +165,20 @@ sól, pieprz`,
     instructions: `Wymieszaj wszystkie składniki z lodem.
 Dopraw do smaku.`,
   },
-
   {
     id: "jagerbomb",
     name: "Jägerbomb",
     category: "Alkoholowy",
-    image: "icons/alcoholic/jagerbomb.jpg",
+    image: "/icons/alcoholic/jagerbomb.jpg",
     ingredients: `40 ml Jägermeister
 napój energetyczny`,
     instructions: `Wrzuć kieliszek Jägermeister do szklanki z energetykiem.`,
   },
-
   {
     id: "cranberry-spritzer",
     name: "Cranberry Spritzer",
     category: "Bezalkoholowy",
-    image: "icons/non-alcoholic/cranberry-spritzer.jpg",
+    image: "/icons/non-alcoholic/cranberry-spritzer.jpg",
     ingredients: `sok żurawinowy
 woda gazowana
 limonka`,
@@ -207,23 +186,21 @@ limonka`,
 Dopełnij wodą gazowaną.
 Dodaj limonkę.`,
   },
-
   {
     id: "ginger-ale",
     name: "Ginger Ale",
     category: "Bezalkoholowy",
-    image: "icons/non-alcoholic/ginger-ale.jpg",
+    image: "/icons/non-alcoholic/ginger-ale.jpg",
     ingredients: `ginger ale
 cytryna`,
     instructions: `Wlej ginger ale do szklanki z lodem.
 Dodaj plaster cytryny.`,
   },
-
   {
     id: "hot-chocolate",
     name: "Hot Chocolate",
     category: "Bezalkoholowy",
-    image: "icons/non-alcoholic/hot-chocolate.jpg",
+    image: "/icons/non-alcoholic/hot-chocolate.jpg",
     ingredients: `mleko
 kakao
 cukier`,
@@ -231,23 +208,21 @@ cukier`,
 Dodaj kakao i cukier.
 Wymieszaj do uzyskania gładkiej konsystencji.`,
   },
-
   {
     id: "lynchburg-lemonade",
     name: "Lynchburg Lemonade",
     category: "Bezalkoholowy",
-    image: "icons/non-alcoholic/lynchburg-lemonade.jpg",
+    image: "/icons/non-alcoholic/lynchburg-lemonade.jpg",
     ingredients: `lemoniada
 sok z cytryny`,
     instructions: `Wlej lemoniadę do szklanki z lodem.
 Dodaj sok z cytryny.`,
   },
-
   {
     id: "milkshake",
     name: "Milkshake",
     category: "Bezalkoholowy",
-    image: "icons/non-alcoholic/milkshake.jpg",
+    image: "/icons/non-alcoholic/milkshake.jpg",
     ingredients: `mleko
 lody waniliowe`,
     instructions: `Zblenduj mleko z lodami.
@@ -255,10 +230,34 @@ Podawaj schłodzone.`,
   },
 ];
 
+export async function seedCatalog() {
+  const db = await openDB();
+  const tx = db.transaction(STORES.catalog, "readwrite");
+  const s = tx.objectStore(STORES.catalog);
+  for (const item of CATALOG) {
+    await reqP(
+      s.put({
+        ...item,
+        createdAt: item.createdAt || new Date().toISOString(),
+      })
+    );
+  }
+  db.close();
+}
+
 export async function getCatalog() {
-  return CATALOG;
+  const db = await openDB();
+  const tx = db.transaction(STORES.catalog, "readonly");
+  const s = tx.objectStore(STORES.catalog);
+  const list = await reqP(s.getAll());
+  db.close();
+  return (list || []).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 }
 
 export async function getCatalogById(id) {
-  return CATALOG.find((c) => c.id === id) || null;
+  const db = await openDB();
+  const tx = db.transaction(STORES.catalog, "readonly");
+  const item = await reqP(tx.objectStore(STORES.catalog).get(id));
+  db.close();
+  return item || null;
 }
