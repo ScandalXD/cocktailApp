@@ -28,13 +28,17 @@ backBtn.addEventListener("click", () => {
 });
 
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
-  }[m]));
+  return String(s).replace(
+    /[&<>"']/g,
+    (m) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[m],
+  );
 }
 
 let cocktail = null;
@@ -63,19 +67,34 @@ if (editBtn) {
   }
 }
 
-
 let imgHtml = "";
-if (cocktail.imageBlob) {
-  const url = URL.createObjectURL(cocktail.imageBlob);
-  imgHtml = `<img class="preview-img" style="width:100%;max-height:340px;object-fit:cover" src="${url}" alt="Zdjęcie koktajlu" />`;
-  setTimeout(() => URL.revokeObjectURL(url), 8000);
+if (cocktail.imageBase64) {
+  imgHtml = `
+    <img
+      class="preview-img detail-img"
+      src="${cocktail.imageBase64}"
+      alt="Zdjęcie koktajlu"
+    />
+  `;
+} else if (cocktail.image) {
+  imgHtml = `
+    <img
+      class="preview-img detail-img"
+      src="${cocktail.image}"
+      alt="Zdjęcie koktajlu"
+    />
+  `;
 }
 
 let audioHtml = `<div class="hint">Brak notatki audio.</div>`;
 if (cocktail.audioBlob) {
-  const aurl = URL.createObjectURL(cocktail.audioBlob);
-  audioHtml = `<audio class="audio" controls src="${aurl}"></audio>`;
-  setTimeout(() => URL.revokeObjectURL(aurl), 12000);
+  try {
+    const aurl = URL.createObjectURL(cocktail.audioBlob);
+    audioHtml = `<audio class="audio" controls src="${aurl}"></audio>`;
+    setTimeout(() => URL.revokeObjectURL(aurl), 12000);
+  } catch (e) {
+    console.warn("Audio load failed", e);
+  }
 }
 
 content.innerHTML = `
@@ -102,8 +121,6 @@ content.innerHTML = `
     ${audioHtml}
   </div>
 `;
-
-
 
 if (!isOwn) {
   deleteBtn.hidden = true;

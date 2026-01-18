@@ -37,7 +37,20 @@ if (backBtn) {
   });
 }
 
-function showMsg(t){ msg.textContent=t; msg.hidden=false; setTimeout(()=>msg.hidden=true, 2200); }
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function showMsg(t) {
+  msg.textContent = t;
+  msg.hidden = false;
+  setTimeout(() => (msg.hidden = true), 2200);
+}
 
 photoEl.addEventListener("change", () => {
   const file = photoEl.files?.[0];
@@ -59,14 +72,16 @@ clearPhotoBtn.addEventListener("click", () => {
 });
 
 recordBtn.addEventListener("click", async () => {
-  try{
+  try {
     streamRef = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(streamRef);
     chunks = [];
 
     mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
     mediaRecorder.onstop = () => {
-      audioBlob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+      audioBlob = new Blob(chunks, {
+        type: mediaRecorder.mimeType || "audio/webm",
+      });
 
       if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
       audioPreviewUrl = URL.createObjectURL(audioBlob);
@@ -75,7 +90,7 @@ recordBtn.addEventListener("click", async () => {
       audioPreview.hidden = false;
       clearAudioBtn.disabled = false;
 
-      streamRef?.getTracks().forEach(t => t.stop());
+      streamRef?.getTracks().forEach((t) => t.stop());
       streamRef = null;
     };
 
@@ -90,7 +105,12 @@ recordBtn.addEventListener("click", async () => {
 
 stopBtn.addEventListener("click", () => {
   if (!mediaRecorder) return;
-  mediaRecorder.stop();
+  try {
+    if (mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  } finally {
+    streamRef?.getTracks().forEach((t) => t.stop());
+    streamRef = null;
+  }
   recordBtn.disabled = false;
   stopBtn.disabled = true;
 });
@@ -107,7 +127,20 @@ clearAudioBtn.addEventListener("click", () => {
 
 saveBtn.addEventListener("click", async () => {
   const name = (nameEl.value || "").trim();
-  if (!name) { showMsg("Podaj nazwę koktajlu."); return; }
+  if (!name) {
+    showMsg("Podaj nazwę koktajlu.");
+    return;
+  }
+
+  let imageBase64 = null;
+
+  if (imageBlob) {
+    if (imageBlob.size > 2 * 1024 * 1024) {
+      showMsg("Zdjęcie jest za duże (max 2MB)");
+      return;
+    }
+    imageBase64 = await blobToBase64(imageBlob);
+  }
 
   const cocktail = {
     id: crypto.randomUUID(),
@@ -116,16 +149,30 @@ saveBtn.addEventListener("click", async () => {
     category: (categoryEl.value || "").trim(),
     ingredients: (ingredientsEl.value || "").trim(),
     instructions: (instructionsEl.value || "").trim(),
-    imageBlob,
+    imageBase64,
+    imageBlob: null,
     audioBlob,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 
-  try{
+  try {
     await addUserCocktail(cocktail);
     location.href = "profile.html?tab=own";
-  }catch(e){
+  } catch (e) {
     console.error(e);
     showMsg("Błąd zapisu.");
   }
 });
+
+function cleanupRecording() {
+  try {
+    if (mediaRecorder && mediaRecorder.state !== "inactive")
+      mediaRecorder.stop();
+  } catch {}
+  streamRef?.getTracks().forEach((t) => t.stop());
+  streamRef = null;
+  mediaRecorder = null;
+}
+
+window.addEventListener("pagehide", cleanupRecording);
+window.addEventListener("beforeunload", cleanupRecording);

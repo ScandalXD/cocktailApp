@@ -9,16 +9,25 @@ export function initPWA() {
   updateBanner();
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js");
+    window.addEventListener("load", async () => {
+      try {
+        const swUrl = new URL("service-worker.js", location.href);
+        await navigator.serviceWorker.register(swUrl);
+        console.log("SW registered:", swUrl.href);
+      } catch (e) {
+        console.error("SW register failed:", e);
+        try { localStorage.setItem("lastError", `[SW ERROR] ${e?.message || e}`); } catch {}
+      }
+    });
   }
-
   let deferredPrompt = null;
   const installBtn = document.getElementById("installBtn");
 
   window.addEventListener("beforeinstallprompt", (e) => {
+    if (!installBtn) return;
     e.preventDefault();
     deferredPrompt = e;
-    if (installBtn) installBtn.hidden = false;
+    installBtn.hidden = false;
   });
 
   if (installBtn) {

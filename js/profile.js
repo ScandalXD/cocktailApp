@@ -134,10 +134,8 @@ function renderTiles(items, itemType) {
     img.className = "tile-img";
     img.alt = c.name || "Cocktail";
 
-    if (c.imageBlob) {
-      const url = URL.createObjectURL(c.imageBlob);
-      img.src = url;
-      img.onload = () => URL.revokeObjectURL(url);
+    if (c.imageBase64) {
+      img.src = c.imageBase64;
     } else if (c.image) {
       img.src = c.image;
     } else {

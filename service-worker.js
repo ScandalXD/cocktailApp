@@ -1,52 +1,50 @@
-const STATIC_CACHE = "cocktailapp-static-v4";
-const IMG_CACHE = "cocktailapp-img-v4";
+const STATIC_CACHE = "cocktailapp-static-v6";
+const IMG_CACHE = "cocktailapp-img-v6";
 
 const ASSETS = [
-  "/",
-  "/index.html",
-  "/add.html",
-  "/detail.html",
-  "/edit.html",
-  "/profile.html",
-  "/login.html",
-  "/register.html",
-  "/manifest.webmanifest",
-  "/css/styles.css",
-  "/js/app.js",
-  "/js/index.js",
-  "/js/add.js",
-  "/js/detail.js",
-  "/js/edit.js",
-  "/js/profile.js",
-  "/js/login.js",
-  "/js/register.js",
-  "/js/auth.js",
-  "/js/db.js",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "index.html",
+  "add.html",
+  "detail.html",
+  "edit.html",
+  "profile.html",
+  "login.html",
+  "register.html",
+  "manifest.webmanifest",
+  "css/styles.css",
+  "js/app.js",
+  "js/index.js",
+  "js/add.js",
+  "js/detail.js",
+  "js/edit.js",
+  "js/profile.js",
+  "js/login.js",
+  "js/register.js",
+  "js/auth.js",
+  "js/db.js",
+  "icons/icon-192.png",
+  "icons/icon-512.png",
 ];
 
 const CATALOG_IMAGES = [
-  "/icons/alcoholic/mojito.jpg",
-  "/icons/alcoholic/margarita.jpg",
-  "/icons/alcoholic/martini.jpg",
-  "/icons/alcoholic/bloody-mary.jpg",
-  "/icons/alcoholic/jagerbomb.jpg",
-  "/icons/non-alcoholic/cranberry-spritzer.jpg",
-  "/icons/non-alcoholic/ginger-ale.jpg",
-  "/icons/non-alcoholic/hot-chocolate.jpg",
-  "/icons/non-alcoholic/lynchburg-lemonade.jpg",
-  "/icons/non-alcoholic/milkshake.jpg",
+  "icons/alcoholic/mojito.jpg",
+  "icons/alcoholic/margarita.jpg",
+  "icons/alcoholic/martini.jpg",
+  "icons/alcoholic/bloody-mary.jpg",
+  "icons/alcoholic/jagerbomb.jpg",
+  "icons/non-alcoholic/cranberry-spritzer.jpg",
+  "icons/non-alcoholic/ginger-ale.jpg",
+  "icons/non-alcoholic/hot-chocolate.jpg",
+  "icons/non-alcoholic/lynchburg-lemonade.jpg",
+  "icons/non-alcoholic/milkshake.jpg",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    (async () => {
-      const staticCache = await caches.open(STATIC_CACHE);
-      await staticCache.addAll(ASSETS);
+  event.waitUntil((async () => {
+    const staticCache = await caches.open(STATIC_CACHE);
+    const imgCache = await caches.open(IMG_CACHE);
 
-      const imgCache = await caches.open(IMG_CACHE);
-      await imgCache.addAll(CATALOG_IMAGES);
+    await Promise.allSettled(ASSETS.map(p => staticCache.add(p)));
+    await Promise.allSettled(CATALOG_IMAGES.map(p => imgCache.add(p)));
 
       self.skipWaiting();
     })(),

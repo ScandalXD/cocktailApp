@@ -118,7 +118,7 @@ const CATALOG = [
     id: "mojito",
     name: "Mojito",
     category: "Alkoholowy",
-    image: "/icons/alcoholic/mojito.jpg",
+    image: "icons/alcoholic/mojito.jpg",
     ingredients: `50 ml białego rumu
 1 limonka
 2 łyżeczki cukru trzcinowego
@@ -134,7 +134,7 @@ Delikatnie wymieszaj.`,
     id: "margarita",
     name: "Margarita",
     category: "Alkoholowy",
-    image: "/icons/alcoholic/margarita.jpg",
+    image: "icons/alcoholic/margarita.jpg",
     ingredients: `50 ml tequili
 25 ml triple sec
 25 ml soku z limonki`,
@@ -145,7 +145,7 @@ Przelej do kieliszka z solonym brzegiem.`,
     id: "martini",
     name: "Martini",
     category: "Alkoholowy",
-    image: "/icons/alcoholic/martini.jpg",
+    image: "icons/alcoholic/martini.jpg",
     ingredients: `60 ml ginu
 10 ml wermutu
 oliwka`,
@@ -157,7 +157,7 @@ Udekoruj oliwką.`,
     id: "bloody-mary",
     name: "Bloody Mary",
     category: "Alkoholowy",
-    image: "/icons/alcoholic/bloody-mary.jpg",
+    image: "icons/alcoholic/bloody-mary.jpg",
     ingredients: `50 ml wódki
 100 ml soku pomidorowego
 sok z cytryny
@@ -169,7 +169,7 @@ Dopraw do smaku.`,
     id: "jagerbomb",
     name: "Jägerbomb",
     category: "Alkoholowy",
-    image: "/icons/alcoholic/jagerbomb.jpg",
+    image: "icons/alcoholic/jagerbomb.jpg",
     ingredients: `40 ml Jägermeister
 napój energetyczny`,
     instructions: `Wrzuć kieliszek Jägermeister do szklanki z energetykiem.`,
@@ -178,7 +178,7 @@ napój energetyczny`,
     id: "cranberry-spritzer",
     name: "Cranberry Spritzer",
     category: "Bezalkoholowy",
-    image: "/icons/non-alcoholic/cranberry-spritzer.jpg",
+    image: "icons/non-alcoholic/cranberry-spritzer.jpg",
     ingredients: `sok żurawinowy
 woda gazowana
 limonka`,
@@ -190,7 +190,7 @@ Dodaj limonkę.`,
     id: "ginger-ale",
     name: "Ginger Ale",
     category: "Bezalkoholowy",
-    image: "/icons/non-alcoholic/ginger-ale.jpg",
+    image: "icons/non-alcoholic/ginger-ale.jpg",
     ingredients: `ginger ale
 cytryna`,
     instructions: `Wlej ginger ale do szklanki z lodem.
@@ -200,7 +200,7 @@ Dodaj plaster cytryny.`,
     id: "hot-chocolate",
     name: "Hot Chocolate",
     category: "Bezalkoholowy",
-    image: "/icons/non-alcoholic/hot-chocolate.jpg",
+    image: "icons/non-alcoholic/hot-chocolate.jpg",
     ingredients: `mleko
 kakao
 cukier`,
@@ -212,7 +212,7 @@ Wymieszaj do uzyskania gładkiej konsystencji.`,
     id: "lynchburg-lemonade",
     name: "Lynchburg Lemonade",
     category: "Bezalkoholowy",
-    image: "/icons/non-alcoholic/lynchburg-lemonade.jpg",
+    image: "icons/non-alcoholic/lynchburg-lemonade.jpg",
     ingredients: `lemoniada
 sok z cytryny`,
     instructions: `Wlej lemoniadę do szklanki z lodem.
@@ -222,7 +222,7 @@ Dodaj sok z cytryny.`,
     id: "milkshake",
     name: "Milkshake",
     category: "Bezalkoholowy",
-    image: "/icons/non-alcoholic/milkshake.jpg",
+    image: "icons/non-alcoholic/milkshake.jpg",
     ingredients: `mleko
 lody waniliowe`,
     instructions: `Zblenduj mleko z lodami.
@@ -235,13 +235,16 @@ export async function seedCatalog() {
   const tx = db.transaction(STORES.catalog, "readwrite");
   const s = tx.objectStore(STORES.catalog);
   for (const item of CATALOG) {
-    await reqP(
       s.put({
         ...item,
         createdAt: item.createdAt || new Date().toISOString(),
-      })
-    );
+    });
   }
+  await new Promise((resolve, reject)=> {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  })
   db.close();
 }
 
