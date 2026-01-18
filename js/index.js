@@ -17,8 +17,12 @@ const allBtn = document.getElementById("allBtn");
 const alcBtn = document.getElementById("alcBtn");
 const nonBtn = document.getElementById("nonBtn");
 
-await seedCatalog();
 let catalog = await getCatalog();
+if (!catalog.length) {
+  await seedCatalog();
+  catalog = await getCatalog();
+}
+
 let filter = "all";
 
 function render(items) {

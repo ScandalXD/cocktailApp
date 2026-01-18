@@ -1,11 +1,6 @@
 import { initPWA } from "./app.js";
 import { getCurrentUser } from "./auth.js";
-import {
-  getCatalogById,
-  getUserCocktailById,
-  deleteUserCocktail,
-  updateUser,
-} from "./db.js";
+import {getCatalogById, getUserCocktailById, deleteUserCocktail} from "./db.js";
 
 initPWA();
 

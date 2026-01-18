@@ -1,4 +1,7 @@
 import { register } from "./auth.js";
+import { initPWA } from "./app.js";
+
+initPWA();
 
 const nameEl = document.getElementById("name");
 const emailEl = document.getElementById("email");

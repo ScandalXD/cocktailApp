@@ -6,6 +6,7 @@ const ASSETS = [
   "/index.html",
   "/add.html",
   "/detail.html",
+  "/edit.html",
   "/profile.html",
   "/login.html",
   "/register.html",
@@ -15,6 +16,7 @@ const ASSETS = [
   "/js/index.js",
   "/js/add.js",
   "/js/detail.js",
+  "/js/edit.js",
   "/js/profile.js",
   "/js/login.js",
   "/js/register.js",
@@ -47,7 +49,7 @@ self.addEventListener("install", (event) => {
       await imgCache.addAll(CATALOG_IMAGES);
 
       self.skipWaiting();
-    })()
+    })(),
   );
 });
 
@@ -59,30 +61,38 @@ self.addEventListener("activate", (event) => {
         keys.map((k) => {
           if (k !== STATIC_CACHE && k !== IMG_CACHE) return caches.delete(k);
           return null;
-        })
+        }),
       );
       self.clients.claim();
-    })()
+    })(),
   );
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
-  if (req.mode === "navigate") {
+
+  if (req.mode === "navigate" && url.origin === location.origin) {
     event.respondWith(
       (async () => {
+        const cachedShell = await caches.match(new Request(url.pathname));
+        if (cachedShell) return cachedShell;
+
         const cached = await caches.match(req);
         if (cached) return cached;
+
         try {
           const fresh = await fetch(req);
           const cache = await caches.open(STATIC_CACHE);
-          cache.put(req, fresh.clone());
+          cache.put(new Request(url.pathname), fresh.clone());
           return fresh;
         } catch {
-          return (await caches.match("/index.html")) || new Response("Offline", { status: 503 });
+          return (
+            (await caches.match("/index.html")) ||
+            new Response("Offline", { status: 503 })
+          );
         }
-      })()
+      })(),
     );
     return;
   }
@@ -103,7 +113,7 @@ self.addEventListener("fetch", (event) => {
         } catch {
           return cached || new Response("", { status: 504 });
         }
-      })()
+      })(),
     );
     return;
   }
@@ -122,6 +132,6 @@ self.addEventListener("fetch", (event) => {
       } catch {
         return cached || new Response("", { status: 504 });
       }
-    })()
+    })(),
   );
 });

@@ -3,10 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="css/styles.css" />
   <title>Rejestracja — CocktailApp</title>
 </head>
 <body>
+    <div id="offlineBanner" class="offline-banner" hidden>
+      Brak połączenia — aplikacja działa offline
+    </div>
   <header class="topbar">
     <div class="brand">
       <div class="logo"><img src="icons/icon-192.png" class="logo-img" alt=""></div>
@@ -16,7 +21,6 @@
       </div>
     </div>
   </header>
-
   <main class="container">
     <section class="card">
       <div class="form-grid">
@@ -36,9 +40,7 @@
           <button id="regBtn" class="btn btn-primary" type="button">
             Utwórz konto
           </button>
-
           <div id="msg" class="msg" hidden></div>
-
           <div class="auth-link">
             Masz już konto?
             <a href="login.html">Zaloguj się</a>
@@ -47,7 +49,6 @@
       </div>
     </section>
   </main>
-
   <script type="module" src="js/register.js"></script>
 </body>
 </html>
