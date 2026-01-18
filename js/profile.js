@@ -16,8 +16,14 @@ const emptyEl = document.getElementById("empty");
 const favTab = document.getElementById("favTab");
 const ownTab = document.getElementById("ownTab");
 const logoutBtn = document.getElementById("logoutBtn");
+const allBtn = document.getElementById("allBtn");
+const alcBtn = document.getElementById("alcBtn");
+const nonBtn = document.getElementById("nonBtn");
 
 let mode = "own";
+let filter = "all";
+let currentCatalog = [];
+let currentOwn = [];
 
 const tab = new URLSearchParams(location.search).get("tab");
 if (tab === "fav") mode = "fav";
@@ -33,6 +39,57 @@ function setMode(next) {
   refresh();
 }
 
+function setFilter(next) {
+  filter = next;
+
+  allBtn?.classList.toggle("btn-primary", filter === "all");
+  allBtn?.classList.toggle("btn-ghost", filter !== "all");
+
+  alcBtn?.classList.toggle("btn-primary", filter === "alc");
+  alcBtn?.classList.toggle("btn-ghost", filter !== "alc");
+
+  nonBtn?.classList.toggle("btn-primary", filter === "non");
+  nonBtn?.classList.toggle("btn-ghost", filter !== "non");
+
+  applyFiltersAndRender();
+}
+
+function applyFilterArr(arr) {
+  return arr.filter(
+    (c) =>
+      filter === "all" ||
+      (filter === "alc" && c.category === "Alkoholowy") ||
+      (filter === "non" && c.category === "Bezalkoholowy")
+  );
+}
+
+function applyFiltersAndRender() {
+  listEl.innerHTML = "";
+  emptyEl.hidden = true;
+
+  if (mode === "fav") {
+    const favCatalog = applyFilterArr(currentCatalog);
+    const favOwn = applyFilterArr(currentOwn);
+
+    if (!favCatalog.length && !favOwn.length) {
+      emptyEl.hidden = false;
+      return;
+    }
+
+    renderTiles(favCatalog, "catalog");
+    renderTiles(favOwn, "own");
+    return;
+  }
+
+  const ownFiltered = applyFilterArr(currentOwn);
+  if (!ownFiltered.length) {
+    emptyEl.hidden = false;
+    return;
+  }
+
+  renderTiles(ownFiltered, "own");
+}
+
 function tileHref(itemType, id) {
   return itemType === "catalog"
     ? `detail.html?cat=1&id=${encodeURIComponent(id)}`
@@ -44,6 +101,7 @@ function renderTiles(items, itemType) {
     const a = document.createElement("a");
     a.className = "tile";
     a.href = tileHref(itemType, c.id);
+
     const fav = document.createElement("button");
     fav.type = "button";
     fav.className = "fav-icon";
@@ -133,16 +191,10 @@ async function refresh() {
         getUserCocktails(user.id),
       ]);
 
-      const favCatalog = catalog.filter((c) => favSet.has(`cat:${c.id}`));
-      const favOwns = owns.filter((c) => favSet.has(`own:${c.id}`));
+      currentCatalog = catalog.filter((c) => favSet.has(`cat:${c.id}`));
+      currentOwn = owns.filter((c) => favSet.has(`own:${c.id}`));
 
-      if (!favCatalog.length && !favOwns.length) {
-        emptyEl.hidden = false;
-        return;
-      }
-
-      renderTiles(favCatalog, "catalog");
-      renderTiles(favOwns, "own");
+      applyFiltersAndRender();
       return;
     }
 
@@ -150,13 +202,11 @@ async function refresh() {
       ownTab.className = "btn btn-primary";
       favTab.className = "btn btn-ghost";
 
-      const owns = await getUserCocktails(user.id);
-      if (!owns.length) {
-        emptyEl.hidden = false;
-        return;
-      }
+      currentCatalog = [];
+      currentOwn = await getUserCocktails(user.id);
 
-      renderTiles(owns, "own");
+      applyFiltersAndRender();
+      return;
     }
   } catch (e) {
     console.error("Profile refresh error:", e);
@@ -168,9 +218,14 @@ async function refresh() {
 favTab?.addEventListener("click", () => setMode("fav"));
 ownTab?.addEventListener("click", () => setMode("own"));
 
+allBtn?.addEventListener("click", () => setFilter("all"));
+alcBtn?.addEventListener("click", () => setFilter("alc"));
+nonBtn?.addEventListener("click", () => setFilter("non"));
+
 logoutBtn?.addEventListener("click", () => {
   logout();
   location.href = "login.html";
 });
 
+setFilter(filter);
 await refresh();
